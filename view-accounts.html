@@ -1,0 +1,112 @@
+<div data-ng-controller="viewAccountsController as vm" class="manage-non-amp-accounts">
+
+	<amp-preloader></amp-preloader>
+
+	<h1 class="heading h2 heading--colour--secondary mb">Manage your non-AMP accounts</h1>
+
+	<section class="alert alert--success alert--iconified mb" ng-show="accountJustAdded">
+		<i class="alert__icon icon icon--tick"></i>
+		<p class="alert__message">
+			<span class="alert__message__call-out">{{ getTypeDisplayName(accountJustAdded._type) }} was successfully added</span>
+		</p>
+	</section>
+
+	<section class="alert alert--success alert--iconified mb" ng-show="accountJustDeleted">
+		<i class="alert__icon icon icon--tick"></i>
+		<p class="alert__message">
+			<span class="alert__message__call-out">{{ getTypeDisplayName(accountJustDeleted._type) }} was successfully deleted</span>
+		</p>
+	</section>
+
+	<section class="alert alert--success alert--iconified mb" ng-show="accountJustUpdated">
+		<i class="alert__icon icon icon--tick"></i>
+		<p class="alert__message">
+			<span class="alert__message__call-out">{{ getTypeDisplayName(accountJustUpdated._type) }} was successfully updated</span>
+		</p>
+	</section>
+
+	<div class="p-- panel panel--full panel--color-secondary-darker utils__color-white">
+		<div class="grid__item 11/12">
+			<b>Assets</b>
+		</div>
+		<div class="grid__item 1/12">
+			<a ng-click="addAccount('assets')" class="utils__align--right">
+				Add <span class="icon icon--plus-outlined icon--plus icon--plus--center-vertical" aria-hidden="true"></span>
+			</a>
+		</div>
+	</div>
+	<accordion class="accordion--grey" close-others="false" ng-if="vm.assets">
+		<accordion-group is-open="true" ng-repeat="(categoryAlias, category) in vm.assets">
+			<accordion-heading>
+				<div class="grid__item 8/12 palm-6/12">
+					<span>{{ getCategoryDisplayName(categoryAlias) }}</span>
+				</div>
+				<div class="grid__item 4/12 palm-6/12 utils__align--right">
+					<span >Total balance</span>
+					<br>
+					<span>{{ category.totalBalance | currency }}</span>
+				</div>
+			</accordion-heading>
+			<accordion-body>
+				<account-row ng-repeat="account in category._accounts" account="account" />
+			</accordion-body>
+		</accordion-group>
+	</accordion>
+
+	<div class="p-- panel panel--full panel--color-secondary-darker utils__color-white">
+		<div class="grid__item 11/12">
+			<b>Borrowings</b>
+		</div>
+		<div class="grid__item 1/12">
+			<a ng-click="addAccount('borrowings')" class="utils__align--right">
+				Add <span class="icon icon--plus-outlined icon--plus icon--plus--center-vertical" aria-hidden="true"></span>
+			</a>
+		</div>
+	</div>
+	<accordion class="accordion--grey" close-others="false" ng-if="vm.borrowings">
+		<accordion-group is-open="true" ng-repeat="(categoryAlias, category) in vm.borrowings">
+			<accordion-heading>
+                <div class="grid__item 9/12">
+                    <span>{{ getCategoryDisplayName(categoryAlias) }}</span>
+                </div>
+                <div class="grid__item 3/12 utils__align--right">
+                    <span >Total balance</span>
+                    <br>
+                    <span>-{{ category.totalBalance | currency }}</span>
+                </div>
+			</accordion-heading>
+			<accordion-body>
+				<account-row ng-repeat="account in category._accounts" account="account" />
+			</accordion-body>
+		</accordion-group>
+	</accordion>
+
+	<div class="p-- panel panel--full panel--color-secondary-darker utils__color-white">
+		<div class="grid__item 11/12">
+			<b>Cover</b>
+		</div>
+		<div class="grid__item 1/12">
+			<a ng-click="addAccount('covers')" class="utils__align--right">
+				Add <span class="icon icon--plus-outlined icon--plus icon--plus--center-vertical" aria-hidden="true"></span>
+			</a>
+		</div>
+	</div>
+	<accordion class="accordion--grey" close-others="false" ng-if="vm.covers">
+		<accordion-group is-open="true" ng-repeat="(categoryAlias, category) in vm.covers">
+			<accordion-heading>
+				<div class="grid__item 9/12">
+					<span>{{ getCategoryDisplayName(categoryAlias) }}</span>
+				</div>
+                <div class="grid__item 3/12 utils__align--right">
+                    <span >&nbsp;</span>
+                    <br>
+                    <span>&nbsp;</span>
+                </div>
+			</accordion-heading>
+			<accordion-body>
+				<account-row ng-repeat="account in category._accounts" account="account" />
+			</accordion-body>
+		</accordion-group>
+	</accordion>
+
+</div>

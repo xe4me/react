@@ -1,0 +1,83 @@
+<div class="p- account-row" ng-class="{'panel panel--full panel--color-primary-light utils__color-white': showDelete}">
+	<div class="grid__item 5/12 palm-1/1">
+
+		<div class="title ">
+			<div ng-class="{'change-color--light':showDelete,'change-color--dark':!showDelete}"ng-if="account._type == 'assets' || account._type == 'borrowings'" ng-switch on="account._category._title">
+				<span ng-switch-when="asxListedShares">
+					{{ account.companyName }} ({{ account.listingCode }})
+				</span>
+				<span ng-switch-when="supers">
+					{{ account.managerName }} - {{ account.productName }}
+				</span>
+				<span ng-switch-when="managedFunds">
+					{{ account.managerName }} - {{ account.productName }}
+				</span>
+				<span ng-switch-default>
+					{{ account.assetName }}
+				</span>
+			</div>
+
+			<div ng-if="account._type == 'covers'">
+				<span>{{ account.insurerName }}</span>
+			</div>
+
+			<strong ng-if="account._newlyCreated" class="label--new btn btn--secondary btn--india-bordered">NEW</strong>
+		</div>
+
+		<div class="description">
+			<div 
+			ng-class="{'change-color--light':showDelete,'change-color--dark':!showDelete}"
+			ng-if="account._type == 'assets' || account._type == 'borrowings'" ng-switch="account._category._title">
+				<span ng-switch-when="asxListedShares">
+					{{ account.unitQuantity }} @ {{ account.unitPrice | currency }} | As at {{ account.unitPriceDate | date:'dd MMM yyyy' }}
+				</span>
+				<span ng-switch-when="supers">
+					{{ account.unitQuantity }} @ {{ account.unitPrice | currency }} | As at {{ account.unitPriceDate | date:'dd MMM yyyy' }}
+				</span>
+				<span ng-switch-when="managedFunds">
+					{{ account.unitQuantity }} @ {{ account.unitPrice | currency }} | As at {{ account.unitPriceDate | date:'dd MMM yyyy' }}
+				</span>
+			</div>
+			<div ng-if="account._type == 'covers'">
+				<span>
+					{{ account.insuranceTypeDesc }}
+				</span>
+				<span ng-if="account.insuranceTypeCode == 'INP'">
+					(per month)
+				</span>
+			</div>
+		</div>
+	</div>
+	<div class="grid__item 5/12 utils__align--right" ng-show="!showDelete" ng-switch on="account._type">
+		<div class="account__assetValue"  ng-switch-when="assets">{{ account.holdingValue | currency }}</div>
+		<div class="account__assetValue" ng-switch-when="borrowings">-{{ account.assetValue | currency }}</div>
+		<div class="account__assetValue"  ng-switch-when="covers">{{ account.insuredAmount | currency }}</div>
+	</div>
+	<div class="grid__item 2/12 utils__align--right" ng-show="!showDelete">
+		<button class="btn btn-iconic" data-automation-id="btn_manage-non-amp-account_edit"  ng-click="editClicked(account)" ng-disabledd="account._customer.impersonate">
+			<span class="icon icon--edit" aria-hidden="true"></span>
+		</button>
+		<button class="btn btn-iconic" data-automation-id="btn_manage-non-amp-account_delete"  ng-click="deleteClicked(account)" ng-disabledd="account._customer.impersonate">
+			<span class="icon icon--delete" aria-hidden="true"></span>
+		</button>
+
+	</div>
+
+	<div class="grid__item 7/12 palm-1/1" ng-show="showDelete">
+		<div class="grid__item 5/12 palm-1/1" >
+			<span class="mr-">You will delete this account</span>
+		</div>
+		<div  class="grid__item 7/12 palm-1/1" >
+			<div class="grid__item 1/2">
+				<button data-automation-id="btn_manage-non-amp-account_confirm"  class="btn btn--primary btn--golf mr--" ng-click="confirmDelete(account)">
+					Confirm
+				</button>	
+			</div>
+			<div class="grid__item 1/2">
+				<button data-automation-id="btn_manage-non-amp-account_cancel"  class="btn btn--primary btn--kilo" ng-click="cancelDelete()">
+					Cancel
+				</button>
+			</div>
+		</div>
+	</div>
+</div>

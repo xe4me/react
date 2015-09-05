@@ -1,0 +1,744 @@
+<div data-ng-controller="editAccountController as vm" class="manage-non-amp-accounts" ng-cloak>
+
+	<h1 class="heading h2 heading--colour--secondary mb" ng-if="vm.account._isNew">
+		<span ng-if="vm.account._type == 'assets'">Adding an asset</span>
+		<span ng-if="vm.account._type == 'borrowings'">Adding a borrowing</span>
+		<span ng-if="vm.account._type == 'covers'">Adding a cover</span>
+	</h1>
+
+	<h1 class="heading h2 heading--colour--secondary mb" ng-if="!vm.account._isNew">
+		<span>Updating your {{ getCategoryDisplayName(vm.account._category._title).toLowerCase() }}</span>
+	</h1>
+
+	<section class="alert alert--danger alert--iconified mb" ng-show="vm.apiReturnedError">
+		<i class="alert__icon icon icon--warning-outlined"></i>
+		<p class="alert__message">
+			<span class="alert__message__call-out">An error occurred</span>
+			<span ng-if="vm.apiReturnedError.errorList.length">
+				<br/>
+			</span>
+			<span ng-if="vm.apiReturnedError.errorList.length" ng-repeat="error in vm.apiReturnedError.errorList">
+				{{ $index + 1 }}. {{ error }} <br/>
+			</span>
+		</p>
+	</section>
+
+	<form ng-submit="formSubmitted()" name="accountForm" novalidate>
+		<div class="grid__item 1/1">
+			<select 
+			autofocus
+			name="assetClassCode"
+			class="data-forms__select full-width"
+			ng-model="vm.account._assetType"
+			ng-if="vm.account._type == 'assets' && vm.account._isNew"
+			ng-change="assetTypeSelected()"
+		>
+			<option disabled ng-selected="!vm.account._assetType" value="">Select an asset type</option>
+			<option value="supers">Super</option>
+			<option value="cash">Cash</option>
+			<option value="bonds">Bonds</option>
+			<option value="property">Property</option>
+			<option value="asxListedShares">ASX listed shares</option>
+			<option value="domesticShares">Domestic unlisted shares</option>
+			<option value="domesticFixedInterest">Domestic fixed interest</option>
+			<option value="internationalShares">International shares</option>
+			<option value="internationalFixedInterest">International fixed interest</option>
+			<option value="managedFunds">Managed funds</option>
+			<option value="other">Other</option>
+		</select>
+		</div>
+
+		
+
+		<div ng-if="vm.account._type == 'covers' && vm.account._assetType" class="p-- panel panel--full panel--color-grey-lighter mt pt- pb-">
+
+			<div ng-if="
+				vm.account._assetType == 'Disablement' ||
+				vm.account._assetType == 'Life insurance' ||
+				vm.account._assetType == 'Income protection' ||
+				vm.account._assetType == 'Terminal Illness' ||
+				vm.account._assetType == 'Trauma' ||
+				vm.account._assetType == 'Waiver Of Premium' ||
+				vm.account._assetType == 'Building' ||
+				vm.account._assetType == 'Contents' ||
+				vm.account._assetType == 'Public Liability' ||
+				vm.account._assetType == 'Motor' ||
+				vm.account._assetType == 'Personal Effects'
+			" class="">
+
+				<label for="insurerName" class="data-forms__label">Insurer *</label>
+				<input
+					type="text"
+					id="insurerName"
+					name="insurerName"
+					class="data-forms__field data-forms__field--short"
+					placeholder="Your insurer"
+					maxlength="40"
+					ng-model="vm.account.insurerName"
+					ng-class="{'data-forms__field--error': accountForm.insurerName.$invalid && vm.confirmClicked}"
+					ng-required="true">
+				<span class="data-forms__error" ng-show="accountForm.insurerName.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.insurerName.$error.required">
+						Insurer name is a required field
+					</span>
+				</span>
+
+				<label for="userAssignedGroup" class="data-forms__label mt-">Owner name</label>
+				<input
+					type="text"
+					id="userAssignedGroup"
+					name="userAssignedGroup"
+					class="data-forms__field data-forms__field--short"
+					placeholder="Owner name"
+					maxlength="40"
+					ng-model="vm.account.userAssignedGroup"
+					ng-class="{'data-forms__field--error': accountForm.userAssignedGroup.$invalid && vm.confirmClicked}">
+				<span class="data-forms__error" ng-show="accountForm.userAssignedGroup.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.userAssignedGroup.$error.required">
+						Please enter an owner
+					</span>
+				</span>
+
+			</div>
+
+			<div ng-if="
+				vm.account._assetType == 'Disablement' ||
+				vm.account._assetType == 'Life insurance' ||
+				vm.account._assetType == 'Income protection'
+			" class="mt-">
+
+				<label for="policyHeld" class="data-forms__label">Policy held *</label>
+				
+				<select
+					name="policyHeld"
+					id="policyHeld"
+					class="data-forms__select"
+					ng-required="true"
+					ng-model="vm.account.policyHeld"
+				>
+					<option disabled ng-selected="!vm.account.policyHeld" value="">Select the policy held</option>
+					<option value="Within super">Within super</option>
+					<option value="Outside super">Outside super</option>
+				</select>
+				<span class="data-forms__error" ng-show="accountForm.policyHeld.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.policyHeld.$error.required">
+						Please select policy
+					</span>
+				</span>
+
+				<label for="insuredAmount" class="data-forms__label mt-" ng-if="vm.account._assetType != 'Income protection'">Sum insured *</label>
+				<label for="insuredAmount" class="data-forms__label mt-" ng-if="vm.account._assetType == 'Income protection'">Sum insured (per month) *</label>
+				<input type="text"
+					   id="insuredAmount"
+					   name="insuredAmount"
+					   class="data-forms__field data-forms__field--short"
+					   placeholder="eg. 1000.00"
+					   ng-model="vm.account.insuredAmount"
+					   ng-class="{ 'data-forms__field--error': accountForm.insuredAmount.$invalid && vm.confirmClicked }"
+					   ng-pattern="/^\d+(\.\d+)?$/"
+					   ng-required="true">
+				<span class="data-forms__error" ng-show="accountForm.insuredAmount.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.insuredAmount.$error.required">
+						Sum insured is a required field
+					</span>
+					<span ng-if="accountForm.insuredAmount.$error.pattern">
+						Sum insured must be a valid number and must be greater than 0.00
+					</span>
+				</span>
+
+				<label for="renewalDateFormatted" class="data-forms__label mt-">Renewal date *</label>
+				<input type="text"
+					   amp-calendar
+                       maxdate="12/12/3000" 
+                       mindate="01/01/2015"
+					   id="renewalDateFormatted"
+					   name="renewalDateFormatted"
+					   class="data-forms__field data-forms__field--short"
+					   placeholder="eg. dd/mm/yyyy"
+					   ng-model="vm.account.renewalDateFormatted"
+					   ng-class="{ 'data-forms__field--error': accountForm.renewalDateFormatted.$invalid && vm.confirmClicked }"
+					   ng-required="true">
+				<span class="data-forms__error" ng-show="accountForm.renewalDateFormatted.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.renewalDateFormatted.$error.required">
+						Renewal date is a required field
+					</span>
+				</span>
+
+				<label for="premiumAmount" class="data-forms__label mt-">Premium *</label>
+				<input type="text"
+					   id="premiumAmount"
+					   name="premiumAmount"
+					   class="data-forms__field data-forms__field--short"
+					   placeholder="eg. 1000.00"
+					   ng-model="vm.account.premiumAmount"
+					   ng-class="{ 'data-forms__field--error': accountForm.premiumAmount.$invalid && vm.confirmClicked }"
+					   ng-pattern="/^\d+(\.\d+)?$/"
+					   ng-required="true">
+				<span class="data-forms__error" ng-show="accountForm.premiumAmount.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.premiumAmount.$error.required">
+						Premium amount is a required field
+					</span>
+					<span ng-if="accountForm.premiumAmount.$error.pattern">
+						Premium must be a valid number and must be greater than 0.00
+					</span>
+				</span>
+
+			</div>
+
+			<div ng-if="
+				vm.account._assetType == 'Income protection'
+			" class="mt-">
+
+				<label for="benefitPeriod" class="data-forms__label">Benefit period *</label>
+				<select
+					name="benefitPeriod"
+					id="benefitPeriod"
+					class="data-forms__select"
+					ng-required="true"
+					ng-model="vm.account.benefitPeriod"
+					>
+					<option disabled ng-selected="!vm.account.benefitPeriod" value="">Select the benefit period</option>
+					<option value="1 year">1 year</option>
+					<option value="2 years">2 years</option>
+					<option value="To age 55">To age 55</option>
+					<option value="To age 60">To age 60</option>
+					<option value="To age 65">To age 65</option>
+					<option value="Lifetime">Lifetime</option>
+					<option value="_other">Other</option>
+				</select>
+				<span class="data-forms__error" ng-show="accountForm.benefitPeriod.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.benefitPeriod.$error.required">
+						Please select benefit period
+					</span>
+				</span>
+
+				<div ng-if="
+					vm.account.benefitPeriod &&
+					vm.account.benefitPeriod != '1 year' &&
+					vm.account.benefitPeriod != '2 years' &&
+					vm.account.benefitPeriod != 'To age 55' &&
+					vm.account.benefitPeriod != 'To age 60' &&
+					vm.account.benefitPeriod != 'To age 65' &&
+					vm.account.benefitPeriod != 'Lifetime'
+				" class="mt-">
+					<label for="otherBenefitPeriod" class="data-forms__label">Other benefit period *</label>
+					<input type="text"
+						   id="otherBenefitPeriod"
+						   name="otherBenefitPeriod"
+						   class="data-forms__field data-forms__field--short"
+						   placeholder="eg. 1000.00"
+						   ng-model="vm.account.otherBenefitPeriod"
+						   ng-class="{ 'data-forms__field--error': accountForm.otherBenefitPeriod.$invalid && vm.confirmClicked }"
+						   ng-required="true">
+					<span class="data-forms__error" ng-show="accountForm.otherBenefitPeriod.$invalid && vm.confirmClicked">
+						<span class="icon icon--close"></span>
+						<span ng-if="accountForm.otherBenefitPeriod.$error.required">
+							Please select other benefit period
+						</span>
+					</span>
+				</div>
+
+				<label for="waitingPeriod" class="data-forms__label mt-">Waiting period *</label>
+				<select
+					name="waitingPeriod"
+					id="waitingPeriod"
+					class="data-forms__select"
+					ng-required="true"
+					ng-model="vm.account.waitingPeriod"
+					>
+					<option disabled ng-selected="!vm.account.waitingPeriod" value="">Select the waiting period</option>
+					<option value="2 weeks">2 weeks</option>
+					<option value="1 month">1 month</option>
+					<option value="2 months">2 months</option>
+					<option value="3 months">3 months</option>
+					<option value="6 months">6 months</option>
+					<option value="1 year">1 year</option>
+					<option value="_other">Other</option>
+				</select>
+				<span class="data-forms__error" ng-show="accountForm.waitingPeriod.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.waitingPeriod.$error.required">
+						Please select waiting period
+					</span>
+				</span>
+
+				<div ng-if="
+					vm.account.waitingPeriod &&
+					vm.account.waitingPeriod != '2 weeks' &&
+					vm.account.waitingPeriod != '1 month' &&
+					vm.account.waitingPeriod != '2 months' &&
+					vm.account.waitingPeriod != '3 months' &&
+					vm.account.waitingPeriod != '6 months' &&
+					vm.account.waitingPeriod != '1 year'
+				" class="mt-">
+					<label for="otherBenefitPeriod" class="data-forms__label">Other waiting period *</label>
+					<input type="text"
+						   id="otherWaitingPeriod"
+						   name="otherWaitingPeriod"
+						   class="data-forms__field data-forms__field--short"
+						   placeholder="eg. 1000.00"
+						   ng-model="vm.account.otherWaitingPeriod"
+						   ng-class="{ 'data-forms__field--error': accountForm.otherWaitingPeriod.$invalid && vm.confirmClicked }"
+						   ng-required="true">
+					<span class="data-forms__error" ng-show="accountForm.otherWaitingPeriod.$invalid && vm.confirmClicked">
+						<span class="icon icon--close"></span>
+						<span ng-if="accountForm.otherWaitingPeriod.$error.required">
+							Please select other waiting period
+						</span>
+					</span>
+				</div>
+			</div>
+
+			<div ng-if="
+				vm.account._assetType == 'Terminal Illness' ||
+				vm.account._assetType == 'Trauma' ||
+				vm.account._assetType == 'Waiver Of Premium' ||
+				vm.account._assetType == 'Building' ||
+				vm.account._assetType == 'Contents' ||
+				vm.account._assetType == 'Public Liability' ||
+				vm.account._assetType == 'Motor' ||
+				vm.account._assetType == 'Personal Effects'
+			" class="mt-">
+
+				<label for="insuredAmount" class="data-forms__label mt-">Sum insured *</label>
+				<input type="text"
+					   id="insuredAmount"
+					   name="insuredAmount"
+					   class="data-forms__field data-forms__field--short"
+					   placeholder="eg. 1000.00"
+					   ng-model="vm.account.insuredAmount"
+					   ng-class="{ 'data-forms__field--error': accountForm.insuredAmount.$invalid && vm.confirmClicked }"
+					   ng-pattern="/^\d+(\.\d+)?$/"
+					   ng-required="true">
+				<span class="data-forms__error" ng-show="accountForm.insuredAmount.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.insuredAmount.$error.required">
+						Sum insured is a required field
+					</span>
+					<span ng-if="accountForm.insuredAmount.$error.pattern">
+						Sum insured must be a valid number and must be greater than 0.00
+					</span>
+				</span>
+
+				<label for="renewalDateFormatted" class="data-forms__label mt-">Renewal date *</label>
+				<input type="text"
+					   amp-calendar
+                       maxdate="12/12/3000" 
+                       mindate="01/01/2015"
+					   id="renewalDateFormatted"
+					   name="renewalDateFormatted"
+					   class="data-forms__field data-forms__field--short"
+					   placeholder="eg. dd/mm/yyyy"
+					   ng-model="vm.account.renewalDateFormatted"
+					   ng-class="{ 'data-forms__field--error': accountForm.renewalDateFormatted.$invalid && vm.confirmClicked }"
+					   ng-required="true">
+				<span class="data-forms__error" ng-show="accountForm.renewalDateFormatted.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.renewalDateFormatted.$error.required">
+						Renewal date is a required field
+					</span>
+				</span>
+
+				<label for="premiumAmount" class="data-forms__label mt-">Premium *</label>
+				<input type="text"
+					   id="premiumAmount"
+					   name="premiumAmount"
+					   class="data-forms__field data-forms__field--short"
+					   placeholder="eg. 1000.00"
+					   ng-model="vm.account.premiumAmount"
+					   ng-class="{ 'data-forms__field--error': accountForm.premiumAmount.$invalid && vm.confirmClicked }"
+					   ng-pattern="/^\d+(\.\d+)?$/"
+					   ng-required="true">
+				<span class="data-forms__error" ng-show="accountForm.premiumAmount.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.premiumAmount.$error.required">
+						Premium amount is a required field
+					</span>
+					<span ng-if="accountForm.premiumAmount.$error.pattern">
+						Premium must be a valid number and must be greater than 0.00
+					</span>
+				</span>
+
+			</div>
+
+		</div>
+
+
+		<div ng-if="vm.account._type == 'borrowings'" ng-init="vm.account._assetType='liablities';vm.account.holdingTypeCode='NOL'" class="p-- panel panel--full panel--color-grey-lighter mt pt- pb-">
+
+			<label for="holdingName" class="data-forms__label">Description *</label>
+			<input
+				type="text"
+				id="holdingName"
+				name="holdingName"
+				class="data-forms__field data-forms__field--short"
+				placeholder="This will be the title of your non-amp account"
+				maxlength="40"
+				ng-model="vm.account.assetName"
+				ng-class="{'data-forms__field--error': accountForm.holdingName.$invalid && vm.confirmClicked}"
+				ng-required="true">
+			<span class="data-forms__error" ng-show="accountForm.holdingName.$invalid && vm.confirmClicked">
+				<span class="icon icon--close"></span>
+				<span ng-if="accountForm.holdingName.$error.required">
+					Description is a required field
+				</span>
+			</span>
+
+			<label for="userAssignedGroup" class="data-forms__label mt-">Owner name</label>
+			<input
+				type="text"
+				id="userAssignedGroup"
+				name="userAssignedGroup"
+				class="data-forms__field data-forms__field--short"
+				placeholder="The owner name"
+				maxlength="50"
+				ng-model="vm.account.userAssignedGroup"
+				ng-class="{'data-forms__field--error': accountForm.userAssignedGroup.$invalid && vm.confirmClicked}">
+
+			<label for="holdingValue" class="data-forms__label mt-">Amount owed *</label>
+			<input type="text"
+				   id="holdingValue"
+				   name="holdingValue"
+				   class="data-forms__field data-forms__field--short"
+				   placeholder="eg. 1000.00"
+				   ng-model="vm.account.assetValue"
+				   ng-class="{ 'data-forms__field--error': accountForm.holdingValue.$invalid && vm.confirmClicked }"
+				   ng-pattern="/^\d+(\.\d+)?$/"
+				   ng-required="true">
+			<span class="data-forms__error" ng-show="accountForm.holdingValue.$invalid && vm.confirmClicked">
+				<span class="icon icon--close"></span>
+				<span ng-if="accountForm.holdingValue.$error.required">
+					Amount owed is a required field
+				</span>
+				<span ng-if="accountForm.holdingValue.$error.pattern">
+					Amount owed is a required field must be a valid number and must be greater than 0.00
+				</span>
+			</span>
+		</div>
+
+		<div class="p-- panel panel--full panel--color-grey-lighter mt" ng-if="vm.account._assetType && vm.account._type == 'assets'">
+
+
+			<div ng-if="
+				(vm.account._assetType == 'supers' ||
+				vm.account._assetType == 'managedFunds') &&
+				vm.fundManagers
+			" class="mt-">
+				<label for="holdingValue" class="data-forms__label">Select fund manager *</label>
+				<select
+					id="listingTypeCode"
+					name="listingTypeCode"
+					class="data-forms__select"
+					ng-model="vm.selectedFundManager"
+					ng-options="fundManager as fundManager.fundManagerName for fundManager in vm.fundManagers"
+					ng-required="true"
+					ng-class="{'data-forms__field--error': accountForm.listingTypeCode.$invalid && vm.confirmClicked}"
+					ng-change="fundManagerSelected(fundManager)">
+					<option value="" disabled>Select a fund manager</option>
+				</select>
+				<span class="data-forms__error" ng-show="accountForm.listingTypeCode.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.listingTypeCode.$error.required">
+						Fund manager is a required field
+					</span>
+				</span>
+			</div>
+
+			<div ng-if="
+				(vm.account._assetType == 'supers' ||
+				vm.account._assetType == 'managedFunds') &&
+				vm.investmentOptions
+			" class="mt-">
+				<label for="investmentOption" class="data-forms__label">Select investment option *</label>
+				<select
+					id="investmentOption"
+					name="investmentOption"
+					class="data-forms__select"
+					ng-model="vm.selectedInvestmentOptionCode"
+					ng-options="investmentOption.productCode as investmentOption.fundName for investmentOption in vm.investmentOptions"
+					ng-class="{'data-forms__field--error': accountForm.investmentOption.$invalid && vm.confirmClicked}"
+					ng-required="true"
+                    ng-change="investmentOptionSelected()">
+					<option value="" disabled>Select an investment option</option>
+				</select>
+				<span class="data-forms__error" ng-show="accountForm.investmentOption.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.investmentOption.$error.required">
+						Investment option is a required field
+					</span>
+				</span>
+			</div>
+
+
+
+			<div ng-if="
+				vm.account._assetType == 'property' ||
+				vm.account._assetType == 'cash' ||
+				vm.account._assetType == 'bonds' ||
+				vm.account._assetType == 'domesticShares' ||
+				vm.account._assetType == 'domesticFixedInterest' ||
+				vm.account._assetType == 'internationalShares' ||
+				vm.account._assetType == 'internationalFixedInterest' ||
+				vm.account._assetType == 'other'
+			" class="mt-">
+				<label for="holdingName" class="data-forms__label">Description *</label>
+				<input
+					type="text"
+					id="holdingName"
+					name="holdingName"
+					class="data-forms__field data-forms__field--short"
+					placeholder="This will be the title of your non-amp account"
+					maxlength="40"
+					ng-model="vm.account.assetName"
+					ng-class="{'data-forms__field--error': accountForm.holdingName.$invalid && vm.confirmClicked}"
+					ng-required="true">
+				<span class="data-forms__error" ng-show="accountForm.holdingName.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.holdingName.$error.required">
+						Description is a required field
+					</span>
+				</span>
+			</div>
+
+			<div ng-if="
+				vm.account._assetType == 'supers' ||
+				vm.account._assetType == 'property' ||
+				vm.account._assetType == 'cash' ||
+				vm.account._assetType == 'bonds' ||
+				vm.account._assetType == 'domesticShares' ||
+				vm.account._assetType == 'domesticFixedInterest' ||
+				vm.account._assetType == 'internationalShares' ||
+				vm.account._assetType == 'internationalFixedInterest' ||
+				vm.account._assetType == 'managedFunds' ||
+				vm.account._assetType == 'other'
+			" class="mt-">
+				<label for="userAssignedGroup" class="data-forms__label">Owner name</label>
+				<input
+					type="text"
+					id="userAssignedGroup"
+					name="userAssignedGroup"
+					class="data-forms__field data-forms__field--short"
+					placeholder="The owner name"
+					maxlength="50"
+					ng-model="vm.account.userAssignedGroup"
+					ng-class="{'data-forms__field--error': accountForm.userAssignedGroup.$invalid && vm.confirmClicked}">
+			</div>
+
+			<div ng-if="
+				vm.account._assetType == 'supers' &&
+				vm.selectedInvestmentOptionCode
+			" class="mt-">
+				<label for="unitQuantity" class="data-forms__label">Unit of shares held *</label>
+				<input type="text"
+					   id="unitQuantity"
+					   name="unitQuantity"
+					   class="data-forms__field data-forms__field--short"
+					   placeholder="eg. 1000"
+					   ng-model="vm.account.unitQuantity"
+					   ng-class="{ 'data-forms__field--error': accountForm.unitQuantity.$invalid && vm.confirmClicked }"
+					   ng-pattern="/^\d+$/"
+					   ng-required="true">
+				<span class="data-forms__error" ng-show="accountForm.unitQuantity.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.unitQuantity.$error.required">
+						Unit of shares held is a required field
+					</span>
+					<span ng-if="accountForm.unitQuantity.$error.pattern">
+						Unit of shares held must be a positive whole number
+					</span>
+				</span>
+			</div>
+
+			<div ng-if="
+				vm.account._assetType == 'property' ||
+				vm.account._assetType == 'cash' ||
+				vm.account._assetType == 'bonds' ||
+				vm.account._assetType == 'domesticShares' ||
+				vm.account._assetType == 'domesticFixedInterest' ||
+				vm.account._assetType == 'internationalShares' ||
+				vm.account._assetType == 'internationalFixedInterest' ||
+				vm.account._assetType == 'other'
+			" class="mt-">
+				<label for="holdingValue" class="data-forms__label">Total value *</label>
+				<input type="text"
+					   id="holdingValue"
+					   name="holdingValue"
+					   class="data-forms__field data-forms__field--short"
+					   placeholder="eg. 1000.00"
+					   ng-model="vm.account.assetValue"
+					   ng-class="{ 'data-forms__field--error': accountForm.holdingValue.$invalid && vm.confirmClicked }"
+					   ng-pattern="/^\d+(\.\d+)?$/"
+					   ng-required="true">
+				<span class="data-forms__error" ng-show="accountForm.holdingValue.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.holdingValue.$error.required">
+						Total value is a required field
+					</span>
+					<span ng-if="accountForm.holdingValue.$error.pattern">
+						Total value must be a valid number and must be greater than 0.00
+					</span>
+				</span>
+			</div>
+
+			<div class="asx-share-selector mt-" ng-if="vm.account._assetType == 'asxListedShares'">
+
+
+
+				<section class="alert alert--success alert--iconified mt--" ng-show="vm.account.holdingName">
+					<i class="alert__icon icon icon--tick"></i>
+					<p class="alert__message">
+						<span class="alert__message__call-out">{{ vm.account.listingCode }}</span>
+						<span>{{ vm.account.holdingName }}</span>
+						<span class="icon icon--modal-close" aria-hidden="true" ng-click="asxSearchSelectedCompanyRemove()" style="font-size: 2em; line-height:1em; float:right;"></span>
+					</p>
+				</section>
+
+				<div ng-if="!vm.account.holdingName">
+
+					<div style="overflow:hidden;" ng-init="showAsxSearchTab = 'code'" class="mb-">
+						<div class="content-tabs ">
+							<div class="content-tabs__tab lap-and-up-2/8 hidden-tablet-and-down" ng-class="{'-button': showAsxSearchTab == 'code'}" ng-click="showAsxSearchTab = 'code'">
+								<div class="content-tabs__tab__body">
+									ASX code
+								</div>
+							</div>
+							<div class="content-tabs__tab lap-and-up-2/8 hidden-tablet-and-down" ng-class="{'-button': showAsxSearchTab == 'name'}" ng-click="showAsxSearchTab = 'name'">
+								<div class="content-tabs__tab__body">
+									Company name
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div ng-if="showAsxSearchTab == 'name'">
+						<label for="asxCompanyNameSearch" class="data-forms__label">Enter company name *</label>
+						<div angucomplete-alt
+							 id="asxCompanyNameSearch"
+							 minlength="1"
+							 placeholder="Search for company Name"
+							 remote-api-handler="asxCompanyNameSearchFn"
+							 remote-url-data-field="body.data"
+							 title-field="asxCode,companyName"
+							 pause="400"
+							 selected-object="asxSearchSelectedCompanyFn"
+							 input-class="data-forms__field data-forms__field--short"
+							 match-class="highlight"
+							 clear-selected="false"
+							 field-required="true"
+							 ng-show="!vm.account.holdingName">
+						</div>
+						<span class="data-forms__error" ng-show="!vm.account.holdingName && vm.confirmClicked">
+							<span class="icon icon--close"></span>
+							<span>
+								Please select your company
+							</span>
+						</span>
+					</div>
+
+					<div ng-if="showAsxSearchTab == 'code'">
+						<label for="asxCompanyCodeSearch" class="data-forms__label">Enter ASX code *</label>
+						<div angucomplete-alt
+							 id="asxCompanyCodeSearch"
+							 minlength="1"
+							 placeholder="Search for ASX code"
+							 remote-api-handler="asxCompanyCodeSearchFn"
+							 remote-url-data-field="body.data"
+							 title-field="asxCode,companyName"
+							 pause="400"
+							 selected-object="asxSearchSelectedCompanyFn"
+							 input-class="data-forms__field data-forms__field--short"
+							 match-class="highlight"
+							 clear-selected="false"
+							 field-required="true"
+							 ng-show="!vm.account.holdingName">
+						</div>
+						<span class="data-forms__error" ng-show="!vm.account.holdingName && vm.confirmClicked">
+							<span class="icon icon--close"></span>
+							<span>
+								Please select your company
+							</span>
+						</span>
+					</div>
+
+				</div>
+
+				<div class="mt-">
+					<label for="stockOwnerName" class="data-forms__label">Owner name</label>
+					<input type="text"
+						   id="stockOwnerName"
+						   name="stockOwnerName"
+						   class="data-forms__field data-forms__field--short"
+						   placeholder="eg. Mr John Smith"
+						   ng-model="vm.account.userAssignedGroup"
+						   ng-class="{ 'data-forms__field--error': accountForm.stockOwnerName.$invalid && vm.confirmClicked }">
+				</div>
+
+				<div class="mt-">
+					<label for="quantityOfShares" class="data-forms__label">Quantity of shares *</label>
+					<input type="text"
+						   id="quantityOfShares"
+						   name="quantityOfShares"
+						   class="data-forms__field data-forms__field--short"
+						   placeholder="eg. 1000"
+						   ng-model="vm.account.unitQuantity"
+						   ng-class="{ 'data-forms__field--error': accountForm.quantityOfShares.$invalid && vm.confirmClicked }"
+						   ng-pattern="/^\d+$/"
+						   ng-required="true">
+					<span class="data-forms__error" ng-show="accountForm.quantityOfShares.$invalid && vm.confirmClicked">
+						<span class="icon icon--close"></span>
+						<span ng-if="accountForm.quantityOfShares.$error.required">
+							Quantity of shares held is a required field
+						</span>
+						<span ng-if="accountForm.quantityOfShares.$error.pattern">
+							Quantity of shares must be a positive whole number
+						</span>
+					</span>
+				</div>
+
+			</div>
+
+			<div ng-if="vm.account._assetType == 'managedFunds'" class="mt-">
+				<label for="quantityOfUnitsHeld" class="data-forms__label">Quantity of units held *</label>
+				<input type="text"
+					   id="quantityOfUnitsHeld"
+					   name="quantityOfUnitsHeld"
+					   class="data-forms__field data-forms__field--short"
+					   placeholder="eg. 1000"
+					   ng-model="vm.account.unitQuantity"
+					   ng-class="{ 'data-forms__field--error': accountForm.quantityOfUnitsHeld.$invalid && vm.confirmClicked }"
+					   ng-pattern="/^\d+$/"
+					   ng-required="true">
+				<span class="data-forms__error" ng-show="accountForm.quantityOfUnitsHeld.$invalid && vm.confirmClicked">
+					<span class="icon icon--close"></span>
+					<span ng-if="accountForm.quantityOfUnitsHeld.$error.required">
+						Quantity of units held is a required field
+					</span>
+					<span ng-if="accountForm.quantityOfUnitsHeld.$error.pattern">
+						Quantity of units held must be a positive whole number
+					</span>
+				</span>
+			</div>
+
+			<p class="mt">* indicates mandatory fields</p>
+
+		</div>
+
+		<div class="mt">
+			<div class="grid__item 6/12 palm-1/1">
+				<button data-automation-id="btn_manage-non-amp-account_back" class="btn btn--primary btn--hotel" ng-click="goBack()">Back</button>
+			</div>
+			<div class="grid__item 6/12 utils__align--right palm-1/1">
+				<button data-automation-id="btn_manage-non-amp-account_confirm"  class="btn btn--primary btn--charlie" ng-disabled="!vm.account._assetType" ng-click="confirm(accountForm)">Confirm</button>
+			</div>
+		</div>
+
+	</form>
+
+</div>
